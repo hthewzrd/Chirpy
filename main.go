@@ -5,15 +5,33 @@ import (
 	"log"
 	"net/http"
 	"sync/atomic"
+	"os"
+	"database/sql"
+	"chirpy/internal/database"
+
+
+	"github.com/joho/godotenv"
+    _ "github.com/lib/pq"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
+	db	*database.Queries
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+    	log.Fatal("Error loading .env file")
+}
 	const port = "8080"
-	apiCfg := apiConfig{}
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	dbQueries := database.New(db)
+
+	apiCfg := apiConfig{
+		db: dbQueries,
+	}
 
 	mux := http.NewServeMux()
 
@@ -22,7 +40,7 @@ func main() {
 
 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
-
+	mux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
 
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
