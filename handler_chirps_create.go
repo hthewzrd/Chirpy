@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bootdotdev/learn-http-servers/internal/database"
+	"chirpy/internal/database"
 	"github.com/google/uuid"
 )
 
